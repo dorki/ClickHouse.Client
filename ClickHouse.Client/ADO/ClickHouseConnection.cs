@@ -52,8 +52,9 @@ public class ClickHouseConnection : DbConnection, IClickHouseConnection, IClonea
     {
     }
 
-    public ClickHouseConnection(string connectionString)
+    public ClickHouseConnection(string connectionString, bool allowInsecureTls = false)
     {
+        AllowInsecureTls = allowInsecureTls;
         ConnectionString = connectionString;
     }
 
@@ -151,10 +152,11 @@ public class ClickHouseConnection : DbConnection, IClickHouseConnection, IClonea
 
     public bool UseCompression { get; private set; }
 
+    public bool AllowInsecureTls { get; private set; }
+
     public bool UseFormDataParameters { get; private set; }
 
-    public void SetFormDataParameters(
-        bool sendParametersAsFormData)
+    public void SetFormDataParameters(bool sendParametersAsFormData)
     {
         this.UseFormDataParameters = sendParametersAsFormData;
     }
@@ -193,7 +195,7 @@ public class ClickHouseConnection : DbConnection, IClickHouseConnection, IClonea
         // If sessions are enabled, always use single connection
         else if (!string.IsNullOrEmpty(session))
         {
-            var factory = new SingleConnectionHttpClientFactory() { Timeout = timeout };
+            var factory = new SingleConnectionHttpClientFactory(AllowInsecureTls) { Timeout = timeout };
             disposables.Add(factory);
             httpClientFactory = factory;
         }
@@ -201,7 +203,7 @@ public class ClickHouseConnection : DbConnection, IClickHouseConnection, IClonea
         // Default case - use default connection pool
         else
         {
-            httpClientFactory = new DefaultPoolHttpClientFactory() { Timeout = timeout };
+            httpClientFactory = new DefaultPoolHttpClientFactory(AllowInsecureTls) { Timeout = timeout };
         }
     }
 
